@@ -19,7 +19,8 @@ namespace Lesson
             Pathfinder logInConsoleOnFridays = new Pathfinder(new SecureLogWritter(new ConsoleLogWritter()));
             logInConsoleOnFridays.Find();
 
-            Pathfinder logInConsoleAndFileOnFridays = new Pathfinder(new SecureLogConsoleAndFileWritter(new ConsoleLogWritter(), new FileLogWritter()));
+            Pathfinder logInConsoleAndFileOnFridays = new Pathfinder
+                (new SecureLogConsoleAndFileWritter(new ConsoleLogWritter(), new FileLogWritter()));
             logInConsoleAndFileOnFridays.Find();
         }
     }
@@ -58,15 +59,18 @@ namespace Lesson
 
     class FileLogWritter : ILogger
     {
+        private const string LogText = "log.txt";
+
         public virtual void WriteError(string message)
         {
-            File.WriteAllText("log.txt", message);
+            File.WriteAllText(LogText, message);
         }
     }
 
     class SecureLogWritter : ILogger
     {
         private ILogger _logger;
+        private const string LogText = "log.txt";
 
         public SecureLogWritter(ILogger logger)
         {
@@ -80,32 +84,29 @@ namespace Lesson
         {
             if (DateTime.Now.DayOfWeek == DayOfWeek.Friday)
             {
-                File.WriteAllText("log.txt", message);
+                File.WriteAllText(LogText, message);
             }
         }
     }
 
     class SecureLogConsoleAndFileWritter : ILogger
     {
-        private ILogger _loggerConsole;
-        private ILogger _loggerFile;
+        private ILogger[] _loggers;
 
-        public SecureLogConsoleAndFileWritter(ILogger loggerConsole, ILogger loggerFile)
+        public SecureLogConsoleAndFileWritter(ILogger[] loggers)
         {
-            if (loggerConsole == null)
-                throw new ArgumentNullException(nameof(loggerConsole));
-
-            if (loggerFile == null)
+            if (loggers == null)
                 throw new ArgumentNullException(nameof(loggerFile));
 
-            _loggerConsole = loggerConsole;
-            _loggerFile = loggerFile;
+            _loggers = loggers;
         }
 
         public void WriteError(string message)
         {
-            _loggerConsole.WriteError(message);
-            _loggerFile.WriteError(message);
+            foreach (var logger in _loggers)
+            {
+                logger.WriteError(message);
+            }
         }
     }
 }
